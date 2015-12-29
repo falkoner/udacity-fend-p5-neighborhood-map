@@ -149,10 +149,10 @@ gulp.task('_content_dev', function() {
         .pipe(gulp.dest(dest.content));
 });
 
-gulp.task('css-watch', ['_styles'], browserSync.reload);
-gulp.task('content-watch', ['_content'], browserSync.reload);
+gulp.task('css-watch', ['_styles_dev', '_content'], browserSync.reload);
+gulp.task('content-watch', ['_content_dev'], browserSync.reload);
 gulp.task('image-watch', ['_images'], browserSync.reload);
-gulp.task('script-watch', ['_scripts'], browserSync.reload);
+gulp.task('script-watch', ['_scripts_dev', '_content'], browserSync.reload);
 
 
 gulp.task('ngrok-url', function(cb) {
