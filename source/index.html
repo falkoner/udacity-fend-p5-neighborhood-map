@@ -23,8 +23,7 @@
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
   </head>
-  <body>
- <!-- begin template -->
+<body>
 <div class="navbar navbar-custom navbar-fixed-top">
  <div class="navbar-header"><a class="navbar-brand" href="#">| Sunnyvale Diners |</a>
       <a class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -64,29 +63,48 @@
 <div id="map-canvas"></div>
 <div class="container-fluid" id="main">
   <div class="row">
-    <div class="col-xs-4" id="left">
+    <div class="col-xs-4" id="left" data-bind="click: selectNoDiner">
 
       <h3>Diners</h3>
 
-      <!-- diners list -->
       <div class="list-group" data-bind="foreach: listOfDiners">
         <a href="#" class="list-group-item" data-bind="
-            css: {active: $data == $root.selectedDiner()},
-            click: $root.selectDiner">
-          <h4 class="list-group-item-heading" data-bind="text: name"></h4>
-          <p class="list-group-item-text" data-bind="text: id"></p>
+              css: {active: $data == $root.selectedDiner(),
+                    'not-visited-diner': visitCounter() < 1},
+              click: $root.selectDiner, clickBubble: false">
+
+          <h4 class="list-group-item-heading">
+            <span data-bind="text: name">Diner name</span>
+            <span class="badge badge-info" data-bind="text: visitCounter"></span>
+            <div class="pull-right">
+              <button class="btn btn-default" data-bind="click: $root.visitDiner, clickBubble: false">
+                <span class="glyphicon glyphicon-check" aria-hidden="true"></span>
+              </button>
+            </div>
+          </h4>
+
+          <ul class="list-inline" data-bind="foreach: labels">
+            <li>
+              <span class="label label-info" data-bind="text: $data">></span>
+            </li>
+          </ul>
         </a>
+        </div>
       </div>
+      <!-- end diners list -->
       <button class="center-block btn btn-info">Close list</button>
 
       <hr>
 
     </div>
-    <div class="col-xs-8"><!-- placeholder for map-canvas --></div>
+    <div class="col-xs-8"><!-- placeholder for map-canvas -->
+      <div class="jumbotron map-loader" data-bind="visible: !isMapLoaded()">
+        <h2>Map is being loaded...</h2>
+      </div>
+    </div>
 
   </div>
 </div>
-<!-- end template -->
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="js/jquery.min.js"></script>
