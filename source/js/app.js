@@ -97,6 +97,19 @@ var DinersViewModel = function (rawDinersData) {
     diner.visitCounter(counter + 1);
   };
 
+  self.visitProgress = ko.computed(function() {
+    var visited = 0, total = 0;
+
+    self.listOfDiners().forEach(function (diner) {
+      if (diner.visitCounter() > 0) {
+        visited++;
+      }
+    });
+
+    total = self.listOfDiners().length;
+    return visited + " out of " + total;
+  }, this);
+
   self.renderMarkers = function() {
     self.listOfDiners().forEach(function (diner) {
       diner.setMarker();
