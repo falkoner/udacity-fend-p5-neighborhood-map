@@ -16,42 +16,62 @@ function initMap() {
 
   // remove map-loader placeholder
   viewModel.isMapLoaded(true);
+  // viewModel.loadStoredData();
   // render seed markers only when map available
   viewModel.renderMarkers();
+
+  // fetchDinersFromGooglePlaces(latlng);
 }
 
-/* seed data array */
-var seedDiners = [
-  {
-      name: "Fast Lane Coffee",
-      labels: ["asian", "pizza", "coffee"],
-      lat: 37.376773,
-      lng: -122.030157,
-      id: "4d9a662a674ca14376eaba43"
-  },
-  {
-      name: "Second Lane Coffee",
-      labels: ["asian", "pizza", "coffee"],
-      lat: 37.38,
-      lng: -122.04,
-      id: "4d9a662a674ca14376eaba43"
-  },
-  {
-      name: "Third Lane Coffee",
-      labels: ["asian", "pizza", "coffee"],
-      lat: 37.3699,
-      lng: -122.0299,
-      id: "4d9a662a674ca14376eaba43"
+/* search for diners */
+function fetchDinersFromGooglePlaces(latlng) {
+  var resultsString = [];
+
+  var request = {
+    location: latlng,
+    radius: '300',
+    types: ['restaurant', 'cafe', 'bar']
+  };
+
+  service = new google.maps.places.PlacesService(map);
+  service.nearbySearch(request, processSearchResults);
+
+  function processSearchResults(results, status, pagination) {
+    var usefulProperties = ['geometry', 'name', 'place_id', 'price_level', 'rating', 'vicinity'];
+
+    if (status == google.maps.places.PlacesServiceStatus.OK) {
+      for (var i = 0; i < results.length; i++) {
+        var place = results[i];
+        resultsString.push(cloneAndPluck(place, usefulProperties));
+      }
+    }
+    if (pagination.hasNextPage) {
+      console.log("There is more!");
+      setTimeout(function() {
+        pagination.nextPage();
+      }, 2000);
+    } else {
+      console.log(JSON.stringify(resultsString));
+    }
   }
-];
+
+
+  function cloneAndPluck(sourceObject, keys) {
+    var newObject = {};
+    keys.forEach(function(key) { newObject[key] = sourceObject[key]; });
+    return newObject;
+  }
+}
 
 /* class to represent a diner */
 var Diner = function (rawData) {
   var self = this;
   self.name = ko.observable(rawData.name);
-  self.coordinates = {lat: rawData.lat, lng: rawData.lng};
-  self.id = ko.observable(rawData.id);
-  self.labels = ko.observableArray(rawData.labels);
+  self.coordinates = rawData.geometry.location;
+  self.id = ko.observable(rawData.place_id);
+  self.price_level = rawData.price_level;
+  self.rating = rawData.rating;
+  self.vicinity = rawData.vicinity;
 
   self.visitCounter = ko.observable('');
 
@@ -67,16 +87,12 @@ var Diner = function (rawData) {
 
 };
 
-var DinersViewModel = function (rawDinersData) {
+var DinersViewModel = function () {
   var self = this;
 
   self.selectedDiner = ko.observable();
   self.isMapLoaded = ko.observable(false);
-
   self.listOfDiners = ko.observableArray([]);
-  rawDinersData.forEach(function (diner) {
-      self.listOfDiners.push(new Diner(diner));
-  });
 
   self.selectDiner = function(diner) {
     self.selectNoDiner();
@@ -115,8 +131,20 @@ var DinersViewModel = function (rawDinersData) {
       diner.setMarker();
     });
   };
+
+  self.loadStoredData = function() {
+    $.getJSON("/js/seeddata.json")
+      .done(function(data) {
+        self.listOfDiners([]);
+        data.forEach(function (diner) {
+            self.listOfDiners.push(new Diner(diner));
+        });
+      });
+  };
+
+  self.loadStoredData();
 };
 
-var viewModel = new DinersViewModel(seedDiners);
+var viewModel = new DinersViewModel();
 ko.applyBindings(viewModel);
 

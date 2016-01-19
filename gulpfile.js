@@ -17,7 +17,7 @@ var portVal = 3020;
 
 var source = {
   all: ['source/'],
-  scripts: ['source/js/*.js'],
+  scripts: ['source/js/*.js', 'source/js/*.json'],
   styles: ['source/css/*.css'],
   styles_injectable: ['source/css/style.css'],
   fonts: ['source/fonts/*'],
