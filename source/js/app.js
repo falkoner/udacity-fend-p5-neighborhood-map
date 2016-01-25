@@ -9,7 +9,18 @@ function initMap() {
   var mapOptions = {
     center: latlng,
     scrollWheel: false,
-    zoom: 18
+    disableDefaultUI: true,
+    mapTypeId: google.maps.MapTypeId.ROADMAP,
+    zoom: 18,
+    styles:  [
+      {
+        featureType: "poi",
+        elementType: "labels",
+        stylers: [
+              { visibility: "off" }
+        ]
+      }
+    ]
   };
 
   map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
@@ -147,4 +158,3 @@ var DinersViewModel = function () {
 
 var viewModel = new DinersViewModel();
 ko.applyBindings(viewModel);
-
