@@ -12,15 +12,13 @@ function initMap() {
     disableDefaultUI: true,
     mapTypeId: google.maps.MapTypeId.ROADMAP,
     zoom: 18,
-    styles:  [
-      {
-        featureType: "poi",
-        elementType: "labels",
-        stylers: [
-              { visibility: "off" }
-        ]
-      }
-    ]
+    styles: [{
+      featureType: "poi",
+      elementType: "labels",
+      stylers: [{
+        visibility: "off"
+      }]
+    }]
   };
 
   map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
@@ -69,14 +67,18 @@ function fetchDinersFromGooglePlaces(latlng) {
 
   function cloneAndPluck(sourceObject, keys) {
     var newObject = {};
-    keys.forEach(function(key) { newObject[key] = sourceObject[key]; });
+    keys.forEach(function(key) {
+      newObject[key] = sourceObject[key];
+    });
     return newObject;
   }
 }
 
 /* class to represent a diner */
-var Diner = function (rawData) {
+var Diner = function(rawData) {
   var self = this;
+  var icon = "img/icon_24.png";
+
   self.name = ko.observable(rawData.name);
   self.coordinates = rawData.geometry.location;
   self.id = ko.observable(rawData.place_id);
@@ -86,19 +88,33 @@ var Diner = function (rawData) {
 
   self.visitCounter = ko.observable('');
 
-  self.setMarker = function () {
-    var marker = new google.maps.Marker({
-      position: self.coordinates,
-      url: '#',
-      animation: google.maps.Animation.DROP
-    });
+  var marker;
 
+  self.setMarker = function() {
+    marker = new google.maps.Marker({
+     position: self.coordinates,
+     title: self.name(),
+     url: '#',
+     icon: icon,
+     animation: google.maps.Animation.DROP
+    });
     marker.setMap(map);
+    marker.addListener('click', function () {
+      viewModel.selectDiner(self);
+    });
   };
+
+  self.toggleDinerInfo = function () {
+    if (marker.getAnimation() !== null) {
+      marker.setAnimation(null);
+    } else {
+      marker.setAnimation(google.maps.Animation.BOUNCE);
+    }
+  }
 
 };
 
-var DinersViewModel = function () {
+var DinersViewModel = function() {
   var self = this;
 
   self.selectedDiner = ko.observable();
@@ -106,14 +122,16 @@ var DinersViewModel = function () {
   self.listOfDiners = ko.observableArray([]);
 
   self.selectDiner = function(diner) {
-    self.selectNoDiner();
+    if (self.selectedDiner()) {
+      self.selectNoDiner();
+    }
     self.selectedDiner(diner);
-    // TODO show info box on map
+    diner.toggleDinerInfo();
   };
 
   self.selectNoDiner = function() {
+    self.selectedDiner().toggleDinerInfo();
     self.selectedDiner(null);
-    // TODO remove info box from map
   };
 
   self.visitDiner = function(diner) {
@@ -125,9 +143,10 @@ var DinersViewModel = function () {
   };
 
   self.visitProgress = ko.computed(function() {
-    var visited = 0, total = 0;
+    var visited = 0,
+      total = 0;
 
-    self.listOfDiners().forEach(function (diner) {
+    self.listOfDiners().forEach(function(diner) {
       if (diner.visitCounter() > 0) {
         visited++;
       }
@@ -138,7 +157,7 @@ var DinersViewModel = function () {
   }, this);
 
   self.renderMarkers = function() {
-    self.listOfDiners().forEach(function (diner) {
+    self.listOfDiners().forEach(function(diner) {
       diner.setMarker();
     });
   };
@@ -147,8 +166,8 @@ var DinersViewModel = function () {
     $.getJSON("/js/seeddata.json")
       .done(function(data) {
         self.listOfDiners([]);
-        data.forEach(function (diner) {
-            self.listOfDiners.push(new Diner(diner));
+        data.forEach(function(diner) {
+          self.listOfDiners.push(new Diner(diner));
         });
       });
   };
