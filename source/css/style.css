@@ -59,3 +59,7 @@ body{
 .not-visited-diner {
   background-color: #D4EBAC;
 }
+
+.panel-infowindow {
+  margin: 0;
+}

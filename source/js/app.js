@@ -1,5 +1,5 @@
 /* google maps */
-var map;
+var map, infoWindow;
 
 function initMap() {
 
@@ -23,12 +23,29 @@ function initMap() {
 
   map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
 
+  // info window initialization with template
+  infoWindow = new google.maps.InfoWindow({
+    content: '<div id="infowindow-container" data-bind="' +
+      "template: { name: 'diner-infowindow-template', data: selectedDiner }" +
+      '"></div>'
+  });
+  var isInfoWindowLoaded = false;
+
+  google.maps.event.addListener(infoWindow, 'domready', function() {
+    if (!isInfoWindowLoaded) {
+      ko.applyBindings(viewModel, $('#infowindow-container')[0]);
+      isInfoWindowLoaded = true;
+    }
+  });
+
   // remove map-loader placeholder
   viewModel.isMapLoaded(true);
   // viewModel.loadStoredData();
   // render seed markers only when map available
   viewModel.renderMarkers();
 
+  // use in manual mode only to get data from google
+  // TODO move to external file
   // fetchDinersFromGooglePlaces(latlng);
 }
 
@@ -104,12 +121,15 @@ var Diner = function(rawData) {
     });
   };
 
-  self.toggleDinerInfo = function () {
-    if (marker.getAnimation() !== null) {
-      marker.setAnimation(null);
-    } else {
-      marker.setAnimation(google.maps.Animation.BOUNCE);
-    }
+  self.select = function () {
+    infoWindow.open(map, marker);
+    marker.setAnimation(google.maps.Animation.BOUNCE);
+    setTimeout(function () { marker.setAnimation(null); }, 5000);
+  }
+
+  self.deselect = function () {
+    infoWindow.close();
+    marker.setAnimation(null);
   }
 
 };
@@ -122,16 +142,18 @@ var DinersViewModel = function() {
   self.listOfDiners = ko.observableArray([]);
 
   self.selectDiner = function(diner) {
-    if (self.selectedDiner()) {
-      self.selectNoDiner();
-    }
+    self.selectNoDiner();
+    diner.select();
     self.selectedDiner(diner);
-    diner.toggleDinerInfo();
   };
 
   self.selectNoDiner = function() {
-    self.selectedDiner().toggleDinerInfo();
-    self.selectedDiner(null);
+    if (self.selectedDiner()) {
+      self.selectedDiner().deselect();
+    }
+
+    // can't do that - will break binding to info window
+    // self.selectedDiner(null);
   };
 
   self.visitDiner = function(diner) {
