@@ -44,9 +44,8 @@ function initMap() {
   // render seed markers only when map available
   viewModel.renderMarkers();
 
-  // use in manual mode only to get data from google
-  // TODO move to external file
-  // fetchDinersFromGooglePlaces(latlng);
+  // use in debug mode only to get data from google
+  // googlePlacesLoader.fetchDinersFromGooglePlaces(latlng);
 }
 
 /* search for diners */
