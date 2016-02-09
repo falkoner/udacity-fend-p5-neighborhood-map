@@ -48,87 +48,58 @@ function initMap() {
   // googlePlacesLoader.fetchDinersFromGooglePlaces(latlng);
 }
 
-/* search for diners */
-function fetchDinersFromGooglePlaces(latlng) {
-  var resultsString = [];
-
-  var request = {
-    location: latlng,
-    radius: '300',
-    types: ['restaurant', 'cafe', 'bar']
-  };
-
-  service = new google.maps.places.PlacesService(map);
-  service.nearbySearch(request, processSearchResults);
-
-  function processSearchResults(results, status, pagination) {
-    var usefulProperties = ['geometry', 'name', 'place_id', 'price_level', 'rating', 'vicinity'];
-
-    if (status == google.maps.places.PlacesServiceStatus.OK) {
-      for (var i = 0; i < results.length; i++) {
-        var place = results[i];
-        resultsString.push(cloneAndPluck(place, usefulProperties));
-      }
-    }
-    if (pagination.hasNextPage) {
-      console.log("There is more!");
-      setTimeout(function() {
-        pagination.nextPage();
-      }, 2000);
-    } else {
-      console.log(JSON.stringify(resultsString));
-    }
-  }
-
-
-  function cloneAndPluck(sourceObject, keys) {
-    var newObject = {};
-    keys.forEach(function(key) {
-      newObject[key] = sourceObject[key];
-    });
-    return newObject;
-  }
-}
-
 /* class to represent a diner */
 var Diner = function(rawData) {
   var self = this;
   var icon = "img/icon_24.png";
 
-  self.name = ko.observable(rawData.name);
+  self.name = rawData.name;
   self.coordinates = rawData.geometry.location;
-  self.id = ko.observable(rawData.place_id);
-  self.price_level = rawData.price_level;
-  self.rating = rawData.rating;
+  self.id = rawData.place_id;
+  self.price_level = parseInt(rawData.price_level) || "n/a";
+  self.rating = parseFloat(rawData.rating) || "n/a";
   self.vicinity = rawData.vicinity;
 
   self.visitCounter = ko.observable('');
+  self.visible = ko.observable(true);
 
   var marker;
 
   self.setMarker = function() {
     marker = new google.maps.Marker({
-     position: self.coordinates,
-     title: self.name(),
-     url: '#',
-     icon: icon,
-     animation: google.maps.Animation.DROP
+      position: self.coordinates,
+      title: self.name,
+      url: '#',
+      icon: icon,
+      animation: google.maps.Animation.DROP
     });
     marker.setMap(map);
-    marker.addListener('click', function () {
+    marker.addListener('click', function() {
       viewModel.selectDiner(self);
     });
   };
 
-  self.select = function () {
+  self.select = function() {
     infoWindow.open(map, marker);
     marker.setAnimation(google.maps.Animation.BOUNCE);
-    setTimeout(function () { marker.setAnimation(null); }, 5000);
+    setTimeout(function() {
+      marker.setAnimation(null);
+    }, 5000);
   }
 
-  self.deselect = function () {
+  self.deselect = function() {
     infoWindow.close();
     marker.setAnimation(null);
+  }
+
+  self.show = function() {
+    self.visible(true);
+    marker.setMap(map);
+  }
+
+  self.hide = function() {
+    self.visible(false);
+    marker.setMap(null);
   }
 
 };
@@ -139,6 +110,11 @@ var DinersViewModel = function() {
   self.selectedDiner = ko.observable();
   self.isMapLoaded = ko.observable(false);
   self.listOfDiners = ko.observableArray([]);
+  self.listOfVisibleDiners = ko.computed(function() {
+    return self.listOfDiners().filter(function(diner) {
+      return diner.visible();
+    })
+  })
 
   self.selectDiner = function(diner) {
     self.selectNoDiner();
@@ -163,6 +139,66 @@ var DinersViewModel = function() {
     diner.visitCounter(counter + 1);
   };
 
+  // sorting and filtering functionality
+  self.searchTerm = ko.observable("");
+
+  self.searchDiner = function () {
+    if(self.searchTerm() != "") {
+      self.hideFilteredDiners();
+      self.searchTerm("");
+    }
+  }
+  self.sortDiners = function(sorter) {
+    if (self.sorters.current === sorter) {
+      self.listOfDiners.reverse();
+      return;
+    }
+    self.sorters.current = sorter;
+    self.listOfDiners.sort(self.sorters.getSorter("id"));
+    self.listOfDiners.sort(self.sorters.getSorter(sorter));
+  }
+
+  self.sorters = {
+    current: "",
+    getSorter: function functionName(sorter) {
+      return function(left, right) {
+        l = left[sorter];
+        r = right[sorter];
+        if (l === 'n/a') {
+          l = 0;
+        }
+        return l == r ? 0 : (l < r ? -1 : 1)
+      }
+    }
+  }
+
+  self.showAllDiners = function() {
+    self.listOfDiners().forEach(function(diner) {
+      diner.show();
+    })
+  }
+
+  self.hideFilteredDiners = function () {
+    if (self.searchTerm() != "") {
+      console.log("cheking search term");
+      self.listOfDiners().map(function(diner) {
+        st = new RegExp(self.searchTerm(), 'gi');
+        if(!diner.name.match(st)) {
+          console.log("hiding");
+          diner.hide();
+        }
+      })
+    }
+  }
+
+  self.hideVisitedDiners = function() {
+    self.listOfDiners().forEach(function(diner) {
+      if (diner.visitCounter() !== '') {
+        diner.hide();
+      }
+    })
+  }
+
   self.visitProgress = ko.computed(function() {
     var visited = 0,
       total = 0;
@@ -181,7 +217,7 @@ var DinersViewModel = function() {
     self.listOfDiners().forEach(function(diner) {
       diner.setMarker();
     });
-  };
+  }
 
   self.loadStoredData = function() {
     $.getJSON("/js/seeddata.json")
