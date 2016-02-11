@@ -46,6 +46,9 @@ function initMap() {
 
   // use in debug mode only to get data from google
   // googlePlacesLoader.fetchDinersFromGooglePlaces(latlng);
+
+  // use in debug mode to get initial ids for places in Yelp
+  yelpConnector.fetchDinersFromYelp(latlng);
 }
 
 /* class to represent a diner */

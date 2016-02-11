@@ -441,17 +441,6 @@
   {
     "geometry": {
       "location": {
-        "lat": 37.37673349999999,
-        "lng": -122.03040929999997
-      }
-    },
-    "name": "岳阳楼",
-    "place_id": "ChIJcWrMUVy2j4ARc-4WOvYCeWM",
-    "vicinity": "163 South Murphy Avenue, Sunnyvale"
-  },
-  {
-    "geometry": {
-      "location": {
         "lat": 37.3761624,
         "lng": -122.030599
       }
