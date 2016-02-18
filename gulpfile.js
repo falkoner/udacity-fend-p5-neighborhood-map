@@ -11,13 +11,15 @@ var uglify = require('gulp-uglify');
 var del = require('del');
 var inject = require('gulp-inject');
 var ghPages = require('gulp-gh-pages');
+var jsonmin = require('gulp-jsonmin');
 
 var site = '';
 var portVal = 3020;
 
 var source = {
   all: ['source/'],
-  scripts: ['source/js/*.js', 'source/js/*.json'],
+  scripts: ['source/js/*.js'],
+  json: ['source/js/*.json'],
   styles: ['source/css/*.css'],
   styles_injectable: ['source/css/style.css'],
   fonts: ['source/fonts/*'],
@@ -58,8 +60,8 @@ gulp.task('serve', function(cb) {
   );
 });
 
-gulp.task('build', ['_fonts','_scripts', '_styles','_images', '_content']);
-gulp.task('build_dev', ['_fonts', '_scripts_dev', '_styles_dev','_images', '_content_dev']);
+gulp.task('build', ['_fonts','_scripts', '_json', '_styles','_images', '_content']);
+gulp.task('build_dev', ['_fonts', '_scripts_dev', '_json_dev', '_styles_dev','_images', '_content_dev']);
 
 gulp.task('help', taskListing.withFilters(null, 'default'));
 
@@ -81,6 +83,7 @@ gulp.task('_browse', function(){
     });
 
     gulp.watch(source.scripts, ['script-watch']);
+    gulp.watch(source.json, ['json-watch']);
     gulp.watch(source.styles, ['css-watch']);
     gulp.watch(source.content, ['content-watch']);
     gulp.watch(source.images, ['image-watch']);
@@ -112,9 +115,21 @@ gulp.task('_scripts', function() {
 });
 
 gulp.task('_scripts_dev', function() {
-    return gulp.src(source.scripts)
-        .pipe(gulp.dest(dest.scripts));
+  return gulp.src(source.scripts)
+  .pipe(gulp.dest(dest.scripts));
 });
+
+gulp.task('_json', function() {
+  return gulp.src(source.json)
+      .pipe(jsonmin())
+      .pipe(gulp.dest(dest.scripts));
+});
+
+gulp.task('_json_dev', function() {
+  return gulp.src(source.json)
+      .pipe(gulp.dest(dest.scripts));
+});
+
 
 gulp.task('_fonts', function() {
     return gulp.src(source.fonts)
@@ -153,7 +168,7 @@ gulp.task('css-watch', ['_styles_dev', '_content'], browserSync.reload);
 gulp.task('content-watch', ['_content_dev'], browserSync.reload);
 gulp.task('image-watch', ['_images'], browserSync.reload);
 gulp.task('script-watch', ['_scripts_dev', '_content'], browserSync.reload);
-
+gulp.task('json-watch', ['_json_dev'], browserSync.reload);
 
 gulp.task('ngrok-url', function(cb) {
   return ngrok.connect(portVal, function (err, url) {
