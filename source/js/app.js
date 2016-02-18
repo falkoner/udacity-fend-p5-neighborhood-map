@@ -27,7 +27,9 @@ function initMap() {
   infoWindow = new google.maps.InfoWindow({
     content: '<div id="infowindow-container" data-bind="' +
       "template: { name: 'diner-infowindow-template', data: selectedDiner }" +
-      '"></div>'
+      '"></div>',
+    maxWidth: 360
+
   });
   var isInfoWindowLoaded = false;
 
@@ -48,7 +50,7 @@ function initMap() {
   // googlePlacesLoader.fetchDinersFromGooglePlaces(latlng);
 
   // use in debug mode to get initial ids for places in Yelp
-  yelpConnector.fetchDinersFromYelp(latlng);
+  // yelpConnector.fetchDinersFromYelp(latlng);
 }
 
 /* class to represent a diner */
@@ -87,7 +89,7 @@ var Diner = function(rawData) {
     marker.setAnimation(google.maps.Animation.BOUNCE);
     setTimeout(function() {
       marker.setAnimation(null);
-    }, 5000);
+    }, 3000);
   }
 
   self.deselect = function() {
@@ -234,6 +236,29 @@ var DinersViewModel = function() {
 
   self.loadStoredData();
 };
+
+ko.components.register('yelp-data', {
+    viewModel: function(params) {
+      var self = this;
+      self.name = ko.observable();
+      self.is_closed = ko.observable();
+      self.image_url = ko.observable();
+      self.url = ko.observable();
+      self.display_phone = ko.observable();
+      self.review_count = ko.observable();
+      self.categories = ko.observable();
+      self.rating = ko.observable();
+      self.snippet_text = ko.observable();
+
+      var processYelpDetails = function (results) {
+        var diner = results[0];
+        ko.mapping.fromJS(diner, {}, self);
+      }
+
+      yelpConnector.fetchDinerDetailsFromYelp(params.name, params.address, processYelpDetails);
+    },
+    template:  { element: 'yelp-data-template' }
+});
 
 var viewModel = new DinersViewModel();
 ko.applyBindings(viewModel);

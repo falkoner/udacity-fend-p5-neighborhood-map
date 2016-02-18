@@ -12,8 +12,36 @@ var yelpConnector = (function() {
     secret: 'tmQwFSFiYwRu8Ta4a4NYFtNUUQ8'
   };
 
+  var results = [];
+  var offset = 0;
+  var set_step = 20;
+
+  var sendSearchRequest = function (request_payload, callback) {
+    $.ajax({
+      url: request_payload.url,
+      type: request_payload.method,
+      dataType: "jsonp",
+      cache: true,
+      data: oauth.authorize(request_payload, token)
+    }).done(function(data) {
+      results = results.concat(data.businesses);
+      if (data.total > (offset + set_step)) {
+        offset = offset + set_step;
+        request_payload.data.offset = offset;
+        sendSearchRequest(request_payload);
+        return;
+      }
+      // console.log(JSON.stringify(results));
+      typeof callback === 'function' && callback(results);
+
+    }).fail(function (jqxhr, textStatus, error) {
+      console.log("Failed to load: " + textStatus + ", " + error);
+    });
+  }
+
   function fetchDinersFromYelp(latlng) {
-    console.log("using yelp");
+    results = [];
+    offset = 0;
 
     var request_data = {
       url: 'https://api.yelp.com/v2/search',
@@ -26,20 +54,33 @@ var yelpConnector = (function() {
       }
     };
 
-    $.ajax({
-      url: request_data.url,
-      type: request_data.method,
-      dataType: "jsonp",
-      cache: true,
-      data: oauth.authorize(request_data, token)
-    }).done(function(data) {
-      console.log(data);
-    }).fail(function (jqxhr, textStatus, error) {
-      console.log("Failed to load: " + textStatus + ", " + error);
-    });
+    return sendSearchRequest(request_data);
+
+  }
+
+  function fetchDinerDetailsFromYelp(name, address, callback) {
+    console.log("using yelp");
+    results = [];
+    offset = 0;
+
+    var request_data = {
+      url: 'https://api.yelp.com/v2/search',
+      method: 'GET',
+      data: {
+        "callback": "cb",
+        "category_filter": "restaurants,cafes,bars,diners",
+        "term": name,
+        "location": address,
+        "radius_filter": 300,
+        "limit": 1
+      }
+    };
+
+    sendSearchRequest(request_data, callback);
   }
 
   return {
-    fetchDinersFromYelp: fetchDinersFromYelp
+    fetchDinersFromYelp: fetchDinersFromYelp,
+    fetchDinerDetailsFromYelp: fetchDinerDetailsFromYelp
   }
 })();
