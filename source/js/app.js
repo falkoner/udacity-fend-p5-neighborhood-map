@@ -225,7 +225,7 @@ var DinersViewModel = function() {
   }
 
   self.loadStoredData = function() {
-    $.getJSON("/js/seeddata.json")
+    $.getJSON("js/seeddata.json")
       .done(function(data) {
         self.listOfDiners([]);
         data.forEach(function(diner) {
