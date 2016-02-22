@@ -42,9 +42,9 @@ function initMap() {
 
   // remove map-loader placeholder
   viewModel.isMapLoaded(true);
-  // viewModel.loadStoredData();
+  viewModel.loadStoredData(viewModel.renderMarkers);
   // render seed markers only when map available
-  viewModel.renderMarkers();
+  // viewModel.renderMarkers();
 
   // use in debug mode only to get data from google
   // googlePlacesLoader.fetchDinersFromGooglePlaces(latlng);
@@ -224,17 +224,18 @@ var DinersViewModel = function() {
     });
   }
 
-  self.loadStoredData = function() {
+  self.loadStoredData = function(callback) {
     $.getJSON("js/seeddata.json")
       .done(function(data) {
         self.listOfDiners([]);
         data.forEach(function(diner) {
           self.listOfDiners.push(new Diner(diner));
         });
+        typeof callback === 'function' && callback();
       });
   };
 
-  self.loadStoredData();
+  // self.loadStoredData();
 };
 
 ko.components.register('yelp-data', {
