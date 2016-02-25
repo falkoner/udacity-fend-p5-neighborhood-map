@@ -63,7 +63,7 @@
 
   <div id="map-canvas"></div>
   <div class="container-fluid" id="main">
-    <div class="row">
+    <div class="row info-zone">
       <div class="col-xs-4" id="left" data-bind="click: selectNoDiner">
         <div class="well">
           <h3>Diners
@@ -107,7 +107,14 @@
       </div>
     </div>
 
-    <!-->templates</!-->
+    <!-- templates -->
+
+    <script type="text/html" id= notifications-zone-template>
+      <div class="row notifications-zone">
+        <div class="col-xs-12 text-center"></div>
+      </div>
+    </script>
+
     <script type="text/html" id="diner-infowindow-template">
       <div class="panel panel-primary panel-infowindow">
         <div class="panel-heading">
@@ -169,7 +176,8 @@
     <script src="js/googleplacesloader.js"></script>
     <script src='js/app.js'></script>
     <!-- Request Google Maps JS API -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjPxgfVvvzkGcIcErfTijEsk7agnXIQkU&callback=initMap&libraries=places"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjPxgfVvvzkGcIcErfTijEsk7agnXIQkU&callback=initMap&libraries=places"
+            onerror="noMapError()"></script>
 </body>
 
 </html>

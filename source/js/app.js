@@ -1,6 +1,23 @@
-/* google maps */
-var map, infoWindow;
+/* error handling functions */
+function showErrorNotification(errorMessage) {
+  $('div#map-canvas').remove();
+  $('div.info-zone').remove();
+  var notificationsZone = $('#notifications-zone-template').html();
+  $('div#main').append(notificationsZone);
+  $('div.notifications-zone div').append(errorMessage);
+}
 
+function noMapError() {
+  var errorMessage = '<div class="alert alert-danger" role="alert">Can\'t load the map and app</div>';
+  showErrorNotification(errorMessage);
+}
+
+function noSeedDataError() {
+  var errorMessage = '<div class="alert alert-danger" role="alert">Can\'t load seed data</div>';
+  showErrorNotification(errorMessage);
+}
+
+/* main initialization function */
 function initMap() {
 
   /* position Sunnyvale downtown */
@@ -51,6 +68,7 @@ function initMap() {
 
   // use in debug mode to get initial ids for places in Yelp
   // yelpConnector.fetchDinersFromYelp(latlng);
+  ko.applyBindings(viewModel);
 }
 
 /* class to represent a diner */
@@ -109,6 +127,7 @@ var Diner = function(rawData) {
 
 };
 
+/* main view model */
 var DinersViewModel = function() {
   var self = this;
 
@@ -232,12 +251,16 @@ var DinersViewModel = function() {
           self.listOfDiners.push(new Diner(diner));
         });
         typeof callback === 'function' && callback();
+      })
+      .fail(function () {
+        noSeedDataError();
       });
   };
 
   // self.loadStoredData();
 };
 
+/* special component for Yelp data */
 ko.components.register('yelp-data', {
     viewModel: function(params) {
       var self = this;
@@ -261,5 +284,6 @@ ko.components.register('yelp-data', {
     template:  { element: 'yelp-data-template' }
 });
 
+/* top level variables */
+var map, infoWindow;
 var viewModel = new DinersViewModel();
-ko.applyBindings(viewModel);
