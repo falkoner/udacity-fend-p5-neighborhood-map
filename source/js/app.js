@@ -103,6 +103,7 @@ var Diner = function(rawData) {
   };
 
   self.select = function() {
+    map.panTo(self.coordinates);
     infoWindow.open(map, marker);
     marker.setAnimation(google.maps.Animation.BOUNCE);
     setTimeout(function() {
@@ -170,6 +171,7 @@ var DinersViewModel = function() {
     if(self.searchTerm() != "") {
       self.hideFilteredDiners();
       self.searchTerm("");
+      $('.navbar-collapse').collapse('hide');
     }
   }
   self.sortDiners = function(sorter) {
