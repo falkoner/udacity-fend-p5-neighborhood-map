@@ -3,6 +3,7 @@
     //place settings for globals here, such as
     "ko": true,
     "yelpConnector": true,
+    "googlePlacesLoader": true,
     "google": true,
     "map": true
   }

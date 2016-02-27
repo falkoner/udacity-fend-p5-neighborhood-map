@@ -13,11 +13,15 @@ var googlePlacesLoader = (function() {
      'rating', 'vicinity'];
 
     if (status === google.maps.places.PlacesServiceStatus.OK) {
-      for (var i = 0; i < results.length; i++) {
-        var place = results[i];
+      // for (var i = 0; i < results.length; i++) {
+      //   var place = results[i];
+      //   resultsString.push(cloneAndPluck(place, usefulProperties));
+      // }
+      results.forEach(function(place) {
         resultsString.push(cloneAndPluck(place, usefulProperties));
-      }
+      });
     }
+
     if (pagination.hasNextPage) {
       console.log("There is more!");
       setTimeout(function() {
