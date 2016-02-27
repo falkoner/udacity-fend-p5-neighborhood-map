@@ -239,9 +239,16 @@ ko.components.register('yelp-data', {
     self.rating = ko.observable();
     self.snippet_text = ko.observable();
 
+    self.error = ko.observable(false);
+
     var processYelpDetails = function(results) {
-      var diner = results[0];
-      ko.mapping.fromJS(diner, {}, self);
+      var diner;
+      if (results.length < 1) { // was not able to get data from Yelp
+        self.error(true);
+      } else {
+        diner = results[0];
+        ko.mapping.fromJS(diner, {}, self);
+      }
     };
 
     yelpConnector.fetchDinerDetailsFromYelp(params.name, params.address,

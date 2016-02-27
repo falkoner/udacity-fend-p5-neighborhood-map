@@ -130,7 +130,11 @@
     </script>
 
     <script type="text/html"  id='yelp-data-template'>
-        <div class="container-fluent" style="max-height: 80%">
+        <div class="alert alert-danger text-center" role="alert" data-bind="visible: error">
+          <p>Can't load data from Yelp</p>
+        </div>
+        <div class="container-fluent" style="max-height: 80%"
+            data-bind="visible: !error()">
           <h3>
             <span class="label label-danger"
                   data-bind="visible: is_closed()">This place is permanently closed

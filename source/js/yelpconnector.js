@@ -28,21 +28,23 @@ var yelpConnector = (function() {
       if (data.total > (offset + setStep)) {
         offset += setStep;
         requestPayload.data.offset = offset;
-        sendSearchRequest(requestPayload);
+        sendSearchRequest(requestPayload, callback);
         return;
       }
       // console.log(JSON.stringify(results));
-      typeof callback === 'function' && callback(results);
     }).fail(function(jqxhr, textStatus, error) {
+      // Let empty results set indicate problem with load.
+      // If there is no callback - there are no UI dependencies
       console.log("Failed to load: " + textStatus + ", " + error);
+    }).always(function() {
+      typeof callback === 'function' && callback(results);
     });
   };
 
-/**
- * Function to get list of diners around specified point from Yelp
- * @param  {Object} latlng LatLng object to center the search
- * @return {function}        returns array of businesses objects
- */
+  /**
+   * Function to get list of diners around specified point from Yelp
+   * @param  {Object} latlng LatLng object to center the search
+   */
   function fetchDinersFromYelp(latlng) {
     results = [];
     offset = 0;
@@ -58,15 +60,15 @@ var yelpConnector = (function() {
       }
     };
 
-    return sendSearchRequest(requestData);
+    sendSearchRequest(requestData);
   }
 
-/**
- * Function to get details of specified diner
- * @param  {String}   name     Name of a diner
- * @param  {String}   address  Address of the diner
- * @param  {Function} callback callback to process details
- */
+  /**
+   * Function to get details of specified diner
+   * @param  {String}   name     Name of a diner
+   * @param  {String}   address  Address of the diner
+   * @param  {Function} callback callback to process details
+   */
   function fetchDinerDetailsFromYelp(name, address, callback) {
     console.log("using yelp");
     results = [];
