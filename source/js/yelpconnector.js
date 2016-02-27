@@ -14,73 +14,82 @@ var yelpConnector = (function() {
 
   var results = [];
   var offset = 0;
-  var set_step = 20;
+  var setStep = 20;
 
-  var sendSearchRequest = function (request_payload, callback) {
+  var sendSearchRequest = function(requestPayload, callback) {
     $.ajax({
-      url: request_payload.url,
-      type: request_payload.method,
+      url: requestPayload.url,
+      type: requestPayload.method,
       dataType: "jsonp",
       cache: true,
-      data: oauth.authorize(request_payload, token)
+      data: oauth.authorize(requestPayload, token)
     }).done(function(data) {
       results = results.concat(data.businesses);
-      if (data.total > (offset + set_step)) {
-        offset = offset + set_step;
-        request_payload.data.offset = offset;
-        sendSearchRequest(request_payload);
+      if (data.total > (offset + setStep)) {
+        offset += setStep;
+        requestPayload.data.offset = offset;
+        sendSearchRequest(requestPayload);
         return;
       }
       // console.log(JSON.stringify(results));
       typeof callback === 'function' && callback(results);
-
-    }).fail(function (jqxhr, textStatus, error) {
+    }).fail(function(jqxhr, textStatus, error) {
       console.log("Failed to load: " + textStatus + ", " + error);
     });
-  }
+  };
 
+/**
+ * Function to get list of diners around specified point from Yelp
+ * @param  {Object} latlng LatLng object to center the search
+ * @return {function}        returns array of businesses objects
+ */
   function fetchDinersFromYelp(latlng) {
     results = [];
     offset = 0;
 
-    var request_data = {
+    var requestData = {
       url: 'https://api.yelp.com/v2/search',
       method: 'GET',
       data: {
-        "callback": "cb",
-        "category_filter": "restaurants,cafes,bars,diners",
-        "radius_filter": 300,
-        "ll": latlng.lat() + ',' + latlng.lng()
+        callback: "cb",
+        category_filter: "restaurants,cafes,bars,diners",
+        radius_filter: 300,
+        ll: latlng.lat() + ',' + latlng.lng()
       }
     };
 
-    return sendSearchRequest(request_data);
-
+    return sendSearchRequest(requestData);
   }
 
+/**
+ * Function to get details of specified diner
+ * @param  {String}   name     Name of a diner
+ * @param  {String}   address  Address of the diner
+ * @param  {Function} callback callback to process details
+ */
   function fetchDinerDetailsFromYelp(name, address, callback) {
     console.log("using yelp");
     results = [];
     offset = 0;
 
-    var request_data = {
+    var requestData = {
       url: 'https://api.yelp.com/v2/search',
       method: 'GET',
       data: {
-        "callback": "cb",
-        "category_filter": "restaurants,cafes,bars,diners",
-        "term": name,
-        "location": address,
-        "radius_filter": 300,
-        "limit": 1
+        callback: "cb",
+        category_filter: "restaurants,cafes,bars,diners",
+        term: name,
+        location: address,
+        radius_filter: 300,
+        limit: 1
       }
     };
 
-    sendSearchRequest(request_data, callback);
+    sendSearchRequest(requestData, callback);
   }
 
   return {
     fetchDinersFromYelp: fetchDinersFromYelp,
     fetchDinerDetailsFromYelp: fetchDinerDetailsFromYelp
-  }
+  };
 })();

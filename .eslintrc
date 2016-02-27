@@ -1,0 +1,9 @@
+{
+  "globals": {
+    //place settings for globals here, such as
+    "ko": true,
+    "yelpConnector": true,
+    "google": true,
+    "map": true
+  }
+}
