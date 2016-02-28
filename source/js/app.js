@@ -39,8 +39,8 @@ function noSeedDataError() {
 /* class to represent a diner */
 var Diner = function(rawData) {
   var self = this;
-  var icon = "img/icon_24.png";
 
+  self.icon = "img/icon_24.png";
   self.name = rawData.name;
   self.coordinates = rawData.geometry.location;
   self.id = rawData.place_id;
@@ -51,45 +51,49 @@ var Diner = function(rawData) {
   self.visitCounter = ko.observable('');
   self.visible = ko.observable(true);
 
-  var marker;
-
-  self.setMarker = function() {
-    marker = new google.maps.Marker({
-      position: self.coordinates,
-      title: self.name,
-      url: '#',
-      icon: icon,
-      animation: google.maps.Animation.DROP
-    });
-    marker.setMap(map);
-    marker.addListener('click', function() {
-      viewModel.selectDiner(self);
-    });
+  // these function need to stay here to get reference to proper objects
+  // upon creation
+  self.clickListener = function() {
+    viewModel.selectDiner(self);
   };
 
-  self.select = function() {
-    map.panTo(self.coordinates);
-    infoWindow.open(map, marker);
-    marker.setAnimation(google.maps.Animation.BOUNCE);
-    setTimeout(function() {
-      marker.setAnimation(null);
-    }, 3000);
+  self.cancelAnimation = function() {
+    self.marker.setAnimation(null);
   };
+};
 
-  self.deselect = function() {
-    infoWindow.close();
-    marker.setAnimation(null);
-  };
+Diner.prototype.setMarker = function() {
+  this.marker = new google.maps.Marker({
+    position: this.coordinates,
+    title: this.name,
+    url: '#',
+    icon: this.icon,
+    animation: google.maps.Animation.DROP
+  });
+  this.marker.setMap(map);
+  this.marker.addListener('click', this.clickListener);
+};
 
-  self.show = function() {
-    self.visible(true);
-    marker.setMap(map);
-  };
+Diner.prototype.select = function() {
+  map.panTo(this.coordinates);
+  infoWindow.open(map, this.marker);
+  this.marker.setAnimation(google.maps.Animation.BOUNCE);
+  setTimeout(this.cancelAnimation, 3000);
+};
 
-  self.hide = function() {
-    self.visible(false);
-    marker.setMap(null);
-  };
+Diner.prototype.show = function() {
+  this.visible(true);
+  this.marker.setMap(map);
+};
+
+Diner.prototype.deselect = function() {
+  infoWindow.close();
+  this.marker.setAnimation(null);
+};
+
+Diner.prototype.hide = function() {
+  this.visible(false);
+  this.marker.setMap(null);
 };
 
 /* main view model */
