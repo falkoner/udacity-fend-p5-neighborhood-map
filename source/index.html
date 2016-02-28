@@ -67,9 +67,14 @@
     </div>
   </div>
 
-  <div id="map-canvas"></div>
+  <div id="map-canvas" data-bind="visible: globalError() === ''"></div>
   <div class="container-fluid container-fluid-custom" id="main">
-    <div class="row info-zone">
+    <div class="row notifications-zone" data-bind="visible: globalError() != ''">
+      <div class="col-xs-12 text-center">
+        <div class="alert alert-danger" role="alert" data-bind="text: globalError"></div>
+      </div>
+    </div>
+    <div class="row info-zone" data-bind="visible: globalError() === ''">
       <div class="col-xs-6 col-sm-4" id="left" data-bind="click: selectNoDiner">
         <div class="well well-custom">
           <h3>Diners
@@ -114,13 +119,6 @@
     </div>
 
     <!-- templates -->
-
-    <script type="text/html" id= notifications-zone-template>
-      <div class="row notifications-zone">
-        <div class="col-xs-12 text-center"></div>
-      </div>
-    </script>
-
     <script type="text/html" id="diner-infowindow-template">
       <div class="panel panel-primary panel-infowindow">
         <div class="panel-heading">

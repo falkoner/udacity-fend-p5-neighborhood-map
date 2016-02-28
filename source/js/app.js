@@ -5,27 +5,11 @@ var infoWindow;
 /* error handling functions */
 
 /**
- * Hide main page areas and show error
- *
- * @param  {node} errorMessage html element with error message
- */
-function showErrorNotification(errorMessage) {
-  var errorMessageTemplate =
-    '<div class="alert alert-danger" role="alert">MESSAGE</div>';
-  $('div#map-canvas').remove();
-  $('div.info-zone').remove();
-  var notificationsZone = $('#notifications-zone-template').html();
-  $('div#main').append(notificationsZone);
-  $('div.notifications-zone div').append(
-    errorMessageTemplate.replace('MESSAGE', errorMessage));
-}
-
-/**
  * Error of Google Maps load failure
  */
 function noMapError() {
   var errorMessage = "Can't load the map and app";
-  showErrorNotification(errorMessage);
+  viewModel.globalError(errorMessage);
 }
 
 /**
@@ -33,7 +17,7 @@ function noMapError() {
  */
 function noSeedDataError() {
   var errorMessage = "Can't load seed data";
-  showErrorNotification(errorMessage);
+  viewModel.globalError(errorMessage);
 }
 
 /* class to represent a diner */
@@ -228,6 +212,9 @@ var DinersViewModel = function() {
       });
   };
 
+  // error handling
+  self.globalError = ko.observable("");
+
   // self.loadStoredData();
 };
 
@@ -266,7 +253,7 @@ ko.components.register('yelp-data', {
 });
 
 var viewModel = new DinersViewModel();
-
+ko.applyBindings(viewModel);
 /**
  * Main map initialization function
  */
@@ -320,5 +307,4 @@ function initMap() {
 
   // use in debug mode to get initial ids for places in Yelp
   // yelpConnector.fetchDinersFromYelp(latlng);
-  ko.applyBindings(viewModel);
 }
