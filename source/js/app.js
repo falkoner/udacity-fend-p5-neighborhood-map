@@ -134,7 +134,6 @@ var DinersViewModel = function() {
   self.searchDiner = function() {
     if (self.searchTerm() !== "") {
       self.hideFilteredDiners();
-      self.searchTerm("");
       $('.navbar-collapse').collapse('hide');
     }
   };
@@ -166,18 +165,18 @@ var DinersViewModel = function() {
     self.listOfDiners().forEach(function(diner) {
       diner.show();
     });
+    self.searchTerm("");
   };
 
   self.hideFilteredDiners = function() {
-    if (self.searchTerm() !== "") {
-      var st = new RegExp(self.searchTerm(), 'gi');
-      self.listOfDiners().forEach(function(diner) {
-        if (!diner.name.match(st)) {
-          console.log("hiding");
-          diner.hide();
-        }
-      });
-    }
+    var st = new RegExp(self.searchTerm(), 'gi');
+    self.listOfDiners().forEach(function(diner) {
+      if (diner.name.match(st)) {
+        diner.show();
+      } else {
+        diner.hide();
+      }
+    });
   };
 
   self.hideVisitedDiners = function() {

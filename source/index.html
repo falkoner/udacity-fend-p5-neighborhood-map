@@ -44,8 +44,14 @@
         <form class="navbar-form navbar-left" data-bind="submit: searchDiner">
           <div class="form-group" style="display:inline;">
             <div class="input-group">
-              <input type="text" class="form-control" data-bind="value: searchTerm, valueUpdate: 'afterkeydown'" placeholder="What diner?">
-              <span data-bind="click: searchDiner" class="input-group-addon"><span class="glyphicon glyphicon-search"></span> </span>
+              <input type="text" class="form-control"
+                     data-bind="textInput: searchTerm,
+                               event: {keyup: hideFilteredDiners()}"
+                     placeholder="What diner?">
+              <span data-bind="click: searchDiner"
+                    class="input-group-addon">
+                      <span class="glyphicon glyphicon-search"></span>
+              </span>
             </div>
           </div>
         </form>
@@ -180,7 +186,7 @@
     <script src="js/googleplacesloader.js"></script>
     <script src='js/app.js'></script>
     <!-- Request Google Maps JS API -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjPxgfVvvzkGcIcErfTijEsk7agnXIQkU&callback=initMap&libraries=places"
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjPxgfVvvzkGcIcErfTijEsk7agnXIQkU&callback=initMap&libraries=places"
             onerror="noMapError()"></script>
 </body>
 
