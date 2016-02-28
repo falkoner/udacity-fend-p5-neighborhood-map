@@ -1,1 +1,318 @@
-function showErrorNotification(e){var i='<div class="alert alert-danger" role="alert">MESSAGE</div>';$("div#map-canvas").remove(),$("div.info-zone").remove();var n=$("#notifications-zone-template").html();$("div#main").append(n),$("div.notifications-zone div").append(i.replace("MESSAGE",e))}function noMapError(){var e="Can't load the map and app";showErrorNotification(e)}function noSeedDataError(){var e="Can't load seed data";showErrorNotification(e)}function initMap(){var e=new google.maps.LatLng(37.376773,-122.030157),i={center:e,scrollWheel:!1,disableDefaultUI:!0,mapTypeId:google.maps.MapTypeId.ROADMAP,zoom:18,styles:[{featureType:"poi",elementType:"labels",stylers:[{visibility:"off"}]}]};map=new google.maps.Map(document.getElementById("map-canvas"),i),infoWindow=new google.maps.InfoWindow({content:'<div id="infowindow-container" data-bind="template: { name: \'diner-infowindow-template\', data: selectedDiner }"></div>',maxWidth:360});var n=!1;google.maps.event.addListener(infoWindow,"domready",function(){n||(ko.applyBindings(viewModel,$("#infowindow-container")[0]),n=!0)}),viewModel.isMapLoaded(!0),viewModel.loadStoredData(viewModel.renderMarkers),ko.applyBindings(viewModel)}var map,infoWindow,Diner=function(e){var i=this,n="img/icon_24.png";i.name=e.name,i.coordinates=e.geometry.location,i.id=e.place_id,i.price_level=parseInt(e.price_level)||"n/a",i.rating=parseFloat(e.rating)||"n/a",i.vicinity=e.vicinity,i.visitCounter=ko.observable(""),i.visible=ko.observable(!0);var o;i.setMarker=function(){o=new google.maps.Marker({position:i.coordinates,title:i.name,url:"#",icon:n,animation:google.maps.Animation.DROP}),o.setMap(map),o.addListener("click",function(){viewModel.selectDiner(i)})},i.select=function(){map.panTo(i.coordinates),infoWindow.open(map,o),o.setAnimation(google.maps.Animation.BOUNCE),setTimeout(function(){o.setAnimation(null)},3e3)},i.deselect=function(){infoWindow.close(),o.setAnimation(null)},i.show=function(){i.visible(!0),o.setMap(map)},i.hide=function(){i.visible(!1),o.setMap(null)}},DinersViewModel=function(){var e=this;e.selectedDiner=ko.observable(),e.isMapLoaded=ko.observable(!1),e.listOfDiners=ko.observableArray([]),e.listOfVisibleDiners=ko.computed(function(){return e.listOfDiners().filter(function(e){return e.visible()})}),e.selectDiner=function(i){e.selectNoDiner(),i.select(),e.selectedDiner(i)},e.selectNoDiner=function(){e.selectedDiner()&&e.selectedDiner().deselect()},e.visitDiner=function(e){var i=e.visitCounter();""===i&&(i=0),e.visitCounter(i+1)},e.searchTerm=ko.observable(""),e.searchDiner=function(){""!==e.searchTerm()&&(e.hideFilteredDiners(),e.searchTerm(""),$(".navbar-collapse").collapse("hide"))},e.sortDiners=function(i){return e.sorters.current===i?void e.listOfDiners.reverse():(e.sorters.current=i,e.listOfDiners.sort(e.sorters.getSorter("id")),void e.listOfDiners.sort(e.sorters.getSorter(i)))},e.sorters={current:"",getSorter:function(e){return function(i,n){var o=i[e],t=n[e];return"n/a"===o&&(o=0),o==t?0:t>o?-1:1}}},e.showAllDiners=function(){e.listOfDiners().forEach(function(e){e.show()})},e.hideFilteredDiners=function(){if(""!==e.searchTerm()){var i=new RegExp(e.searchTerm(),"gi");e.listOfDiners().forEach(function(e){e.name.match(i)||(console.log("hiding"),e.hide())})}},e.hideVisitedDiners=function(){e.listOfDiners().forEach(function(e){""!==e.visitCounter()&&e.hide()})},e.visitProgress=ko.computed(function(){var i=0,n=0;return e.listOfDiners().forEach(function(e){e.visitCounter()>0&&i++}),n=e.listOfDiners().length,i+" out of "+n},this),e.renderMarkers=function(){e.listOfDiners().forEach(function(e){e.setMarker()})},e.loadStoredData=function(i){$.getJSON("js/seeddata.json").done(function(n){e.listOfDiners([]),n.forEach(function(i){e.listOfDiners.push(new Diner(i))}),"function"==typeof i&&i()}).fail(function(){noSeedDataError()})}};ko.components.register("yelp-data",{viewModel:function(e){var i=this;i.name=ko.observable(),i.is_closed=ko.observable(),i.image_url=ko.observable(),i.url=ko.observable(),i.display_phone=ko.observable(),i.review_count=ko.observable(),i.categories=ko.observable(),i.rating=ko.observable(),i.snippet_text=ko.observable(),i.error=ko.observable(!1);var n=function(e){var n;e.length<1?i.error(!0):(n=e[0],ko.mapping.fromJS(n,{},i))};yelpConnector.fetchDinerDetailsFromYelp(e.name,e.address,n)},template:{element:"yelp-data-template"}});var viewModel=new DinersViewModel;
+/* top level variables */
+var map;
+var infoWindow;
+
+/* error handling functions */
+
+/**
+ * Hide main page areas and show error
+ *
+ * @param  {node} errorMessage html element with error message
+ */
+function showErrorNotification(errorMessage) {
+  var errorMessageTemplate =
+    '<div class="alert alert-danger" role="alert">MESSAGE</div>';
+  $('div#map-canvas').remove();
+  $('div.info-zone').remove();
+  var notificationsZone = $('#notifications-zone-template').html();
+  $('div#main').append(notificationsZone);
+  $('div.notifications-zone div').append(
+    errorMessageTemplate.replace('MESSAGE', errorMessage));
+}
+
+/**
+ * Error of Google Maps load failure
+ */
+function noMapError() {
+  var errorMessage = "Can't load the map and app";
+  showErrorNotification(errorMessage);
+}
+
+/**
+ * Error on failure to load seed data
+ */
+function noSeedDataError() {
+  var errorMessage = "Can't load seed data";
+  showErrorNotification(errorMessage);
+}
+
+/* class to represent a diner */
+var Diner = function(rawData) {
+  var self = this;
+  var icon = "img/icon_24.png";
+
+  self.name = rawData.name;
+  self.coordinates = rawData.geometry.location;
+  self.id = rawData.place_id;
+  self.price_level = parseInt(rawData.price_level) || "n/a";
+  self.rating = parseFloat(rawData.rating) || "n/a";
+  self.vicinity = rawData.vicinity;
+
+  self.visitCounter = ko.observable('');
+  self.visible = ko.observable(true);
+
+  var marker;
+
+  self.setMarker = function() {
+    marker = new google.maps.Marker({
+      position: self.coordinates,
+      title: self.name,
+      url: '#',
+      icon: icon,
+      animation: google.maps.Animation.DROP
+    });
+    marker.setMap(map);
+    marker.addListener('click', function() {
+      viewModel.selectDiner(self);
+    });
+  };
+
+  self.select = function() {
+    map.panTo(self.coordinates);
+    infoWindow.open(map, marker);
+    marker.setAnimation(google.maps.Animation.BOUNCE);
+    setTimeout(function() {
+      marker.setAnimation(null);
+    }, 3000);
+  };
+
+  self.deselect = function() {
+    infoWindow.close();
+    marker.setAnimation(null);
+  };
+
+  self.show = function() {
+    self.visible(true);
+    marker.setMap(map);
+  };
+
+  self.hide = function() {
+    self.visible(false);
+    marker.setMap(null);
+  };
+};
+
+/* main view model */
+var DinersViewModel = function() {
+  var self = this;
+
+  self.selectedDiner = ko.observable();
+  self.isMapLoaded = ko.observable(false);
+  self.listOfDiners = ko.observableArray([]);
+  self.listOfVisibleDiners = ko.computed(function() {
+    return self.listOfDiners().filter(function(diner) {
+      return diner.visible();
+    });
+  });
+
+  self.selectDiner = function(diner) {
+    self.selectNoDiner();
+    diner.select();
+    self.selectedDiner(diner);
+  };
+
+  self.selectNoDiner = function() {
+    if (self.selectedDiner()) {
+      self.selectedDiner().deselect();
+    }
+
+    // can't do that - will break binding to info window
+    // self.selectedDiner(null);
+  };
+
+  self.visitDiner = function(diner) {
+    var counter = diner.visitCounter();
+    if (counter === '') {
+      counter = 0;
+    }
+    diner.visitCounter(counter + 1);
+  };
+
+  // sorting and filtering functionality
+  self.searchTerm = ko.observable("");
+
+  self.searchDiner = function() {
+    if (self.searchTerm() !== "") {
+      self.hideFilteredDiners();
+      self.searchTerm("");
+      $('.navbar-collapse').collapse('hide');
+    }
+  };
+  self.sortDiners = function(sorter) {
+    if (self.sorters.current === sorter) {
+      self.listOfDiners.reverse();
+      return;
+    }
+    self.sorters.current = sorter;
+    self.listOfDiners.sort(self.sorters.getSorter("id"));
+    self.listOfDiners.sort(self.sorters.getSorter(sorter));
+  };
+
+  self.sorters = {
+    current: "",
+    getSorter: function functionName(sorter) {
+      return function(left, right) {
+        var l = left[sorter];
+        var r = right[sorter];
+        if (l === 'n/a') {
+          l = 0;
+        }
+        return l == r ? 0 : (l < r ? -1 : 1);
+      };
+    }
+  };
+
+  self.showAllDiners = function() {
+    self.listOfDiners().forEach(function(diner) {
+      diner.show();
+    });
+  };
+
+  self.hideFilteredDiners = function() {
+    if (self.searchTerm() !== "") {
+      var st = new RegExp(self.searchTerm(), 'gi');
+      self.listOfDiners().forEach(function(diner) {
+        if (!diner.name.match(st)) {
+          console.log("hiding");
+          diner.hide();
+        }
+      });
+    }
+  };
+
+  self.hideVisitedDiners = function() {
+    self.listOfDiners().forEach(function(diner) {
+      if (diner.visitCounter() !== '') {
+        diner.hide();
+      }
+    });
+  };
+
+  self.visitProgress = ko.computed(function() {
+    var visited = 0;
+    var total = 0;
+
+    self.listOfDiners().forEach(function(diner) {
+      if (diner.visitCounter() > 0) {
+        visited++;
+      }
+    });
+
+    total = self.listOfDiners().length;
+    return visited + " out of " + total;
+  }, this);
+
+  self.renderMarkers = function() {
+    self.listOfDiners().forEach(function(diner) {
+      diner.setMarker();
+    });
+  };
+
+  self.loadStoredData = function(callback) {
+    $.getJSON("js/seeddata.json")
+      .done(function(data) {
+        self.listOfDiners([]);
+        data.forEach(function(diner) {
+          self.listOfDiners.push(new Diner(diner));
+        });
+        typeof callback === 'function' && callback();
+      })
+      .fail(function() {
+        noSeedDataError();
+      });
+  };
+
+  // self.loadStoredData();
+};
+
+/* special component for Yelp data */
+ko.components.register('yelp-data', {
+  viewModel: function(params) {
+    var self = this;
+    self.name = ko.observable();
+    self.is_closed = ko.observable();
+    self.image_url = ko.observable();
+    self.url = ko.observable();
+    self.display_phone = ko.observable();
+    self.review_count = ko.observable();
+    self.categories = ko.observable();
+    self.rating = ko.observable();
+    self.snippet_text = ko.observable();
+
+    self.error = ko.observable(false);
+
+    var processYelpDetails = function(results) {
+      var diner;
+      if (results.length < 1) { // was not able to get data from Yelp
+        self.error(true);
+      } else {
+        diner = results[0];
+        ko.mapping.fromJS(diner, {}, self);
+      }
+    };
+
+    yelpConnector.fetchDinerDetailsFromYelp(params.name, params.address,
+      processYelpDetails);
+  },
+  template: {
+    element: 'yelp-data-template'
+  }
+});
+
+var viewModel = new DinersViewModel();
+
+/**
+ * Main map initialization function
+ */
+function initMap() {
+
+  /* position Sunnyvale downtown */
+  var latlng = new google.maps.LatLng(37.376773, -122.030157);
+
+  var mapOptions = {
+    center: latlng,
+    scrollWheel: false,
+    disableDefaultUI: true,
+    mapTypeId: google.maps.MapTypeId.ROADMAP,
+    zoom: 18,
+    styles: [{
+      featureType: "poi",
+      elementType: "labels",
+      stylers: [{
+        visibility: "off"
+      }]
+    }]
+  };
+
+  map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
+
+  // info window initialization with template
+  infoWindow = new google.maps.InfoWindow({
+    content: '<div id="infowindow-container" data-bind="' +
+      "template: { name: 'diner-infowindow-template', data: selectedDiner }" +
+      '"></div>',
+    maxWidth: 360
+
+  });
+  var isInfoWindowLoaded = false;
+
+  google.maps.event.addListener(infoWindow, 'domready', function() {
+    if (!isInfoWindowLoaded) {
+      ko.applyBindings(viewModel, $('#infowindow-container')[0]);
+      isInfoWindowLoaded = true;
+    }
+  });
+
+  // remove map-loader placeholder
+  viewModel.isMapLoaded(true);
+  viewModel.loadStoredData(viewModel.renderMarkers);
+  // render seed markers only when map available
+  // viewModel.renderMarkers();
+
+  // use in debug mode only to get data from google
+  // googlePlacesLoader.fetchDinersFromGooglePlaces(latlng);
+
+  // use in debug mode to get initial ids for places in Yelp
+  // yelpConnector.fetchDinersFromYelp(latlng);
+  ko.applyBindings(viewModel);
+}
