@@ -149,10 +149,13 @@ var DinersViewModel = function() {
 
   self.sorters = {
     current: "",
-    getSorter: function functionName(sorter) {
+    getSorter: function(sorter) {
       return function(left, right) {
-        var l = left[sorter];
-        var r = right[sorter];
+        var l = typeof left[sorter] === 'string' ?
+          left[sorter].toLowerCase() : left[sorter];
+        var r = typeof right[sorter] === 'string' ?
+          right[sorter].toLowerCase() : right[sorter];
+        // typeof l === 'string' && (l = l.toLowerCase());
         if (l === 'n/a') {
           l = 0;
         }
